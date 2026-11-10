@@ -249,6 +249,15 @@ export class QueueWakeRepository {
     });
   }
 
+  /** Whether any row was ever parked on this job with --wake-watchdog, whatever has happened to it since. */
+  everAttachedWatchdog(jobId: string): boolean {
+    if (!this.available) return false;
+    return this.db.prepare(
+      `SELECT 1 FROM queue_transition_wakes
+        WHERE phase = 'armed' AND wake_ref = ? AND wake_kind = 'watchdog' LIMIT 1`,
+    ).get(jobId) !== undefined;
+  }
+
   /** The generating row retains timer lifecycle only while its current park
    *  uses this job, including an explicit reattachment to the same job. */
   findCurrentQitemsByGeneratedTimer(jobId: string): Array<{ qitemId: string; state: string }> {

@@ -16,6 +16,7 @@ import { ulid } from "ulid";
  *   - workflow-keepalive (Phase D)
  *   - idle-gate-qitem
  *   - context-usage-threshold
+ *   - github-pull-request
  *
  * PHASE_C_POLICIES retained as a deprecated alias for callers that
  * still reference it; new code uses PHASE_D_POLICIES.
@@ -45,6 +46,8 @@ export const PHASE_D_POLICIES = [
   "quiet-release",
   // A person's mode ends at its scheduled end: one job per application.
   "mode-scheduled-end",
+  // Issue #2793 — one pull request's checks settling, or its merge/close: one wake, then terminal.
+  "github-pull-request",
 ] as const;
 
 /** @deprecated since Phase D — use PHASE_D_POLICIES. */

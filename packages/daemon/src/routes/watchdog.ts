@@ -9,6 +9,11 @@ import {
 } from "../domain/watchdog-jobs-repository.js";
 import { parseWatchdogSpec } from "../domain/watchdog-policy-engine.js";
 import { updateWatchdogJob } from "../domain/watchdog-job-update.js";
+import {
+  GITHUB_PULL_REQUEST_POLICY,
+  githubPullRequestRegistrationProblem,
+} from "../domain/policies/github-pull-request.js";
+import { resolveDaemonGithubToken } from "../domain/github-pull-request-client.js";
 
 /**
  * Watchdog HTTP routes (PL-004 Phase C). Backs `rig watchdog` CLI verb.
@@ -101,6 +106,18 @@ export function watchdogRoutes(): Hono {
       const jobsRepo = getJobsRepo(c);
       const context = parseWatchdogSpec(body.specYaml).context;
       const isContextUsageThreshold = body.policy === "context-usage-threshold";
+      if (body.policy === GITHUB_PULL_REQUEST_POLICY) {
+        // Issue #2793 — refuse a watch that could never report: a bad spec, a cadence under the floor, or no token.
+        const problem = githubPullRequestRegistrationProblem({
+          context,
+          intervalSeconds: body.intervalSeconds,
+          scanIntervalSeconds: body.scanIntervalSeconds ?? null,
+          hasToken: resolveDaemonGithubToken() !== null,
+        });
+        if (problem) {
+          throw new WatchdogJobsError("spec_invalid", `watchdog spec is not valid for ${GITHUB_PULL_REQUEST_POLICY}: ${problem}`, { policy: body.policy });
+        }
+      }
       const specWatchedFile = typeof context.watched_file === "string"
         ? context.watched_file
         : null;

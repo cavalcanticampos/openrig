@@ -4022,6 +4022,14 @@ export class QueueRepository {
     return this.wakeRepo.currentParkTimerIds();
   }
 
+  /** Issue #2793 — whether rows were ever attached to an operator watchdog, and whether one still waits on it. */
+  watchdogAttachment(jobId: string): { ever: boolean; live: boolean } {
+    return {
+      ever: this.wakeRepo.everAttachedWatchdog(jobId),
+      live: this.wakeRepo.findLiveQitemsByAttachedWatchdog(jobId).length > 0,
+    };
+  }
+
   /** Generated jobs end when neither their original park nor an unfired
    *  attachment still owns them. Standalone operator jobs keep their lifecycle. */
   resolveWatchdogPreDeliveryTerminalReason(jobId: string): string | null {

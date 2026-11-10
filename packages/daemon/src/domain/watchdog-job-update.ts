@@ -2,6 +2,7 @@ import { parse as parseYaml, parseDocument } from "yaml";
 import { artifactPoolListProblem, type ArtifactPoolSpec } from "./policies/artifact-pool-helpers.js";
 import { edgeArtifactRequiredSpecProblem } from "./policies/edge-artifact-required.js";
 import { periodicReminderSpecProblem } from "./policies/periodic-reminder.js";
+import { parseGithubPullRequestSpec } from "./policies/github-pull-request.js";
 import { workflowKeepaliveSpecProblem } from "./policies/workflow-keepalive.js";
 import { isQueueWait, retuneQueueWait } from "./queue-wait-backoff.js";
 import { nextDueAt } from "./watchdog-due.js";
@@ -21,6 +22,7 @@ const UPDATABLE_POLICIES = new Set([
   "workflow-keepalive",
   "idle-gate-qitem",
   "context-usage-threshold",
+  "github-pull-request",
 ]);
 
 /** The session the daemon registers its own jobs as (continuity and auto idle-gate watchdogs). */
@@ -47,6 +49,10 @@ const SPEC_PROBLEMS: Record<string, (spec: ReturnType<typeof parseWatchdogSpec>)
   "edge-artifact-required": (spec) => edgeArtifactRequiredSpecProblem(spec)?.message,
   "artifact-pool-ready": (spec) => artifactPoolListProblem(spec.context["pools"] as ArtifactPoolSpec | ArtifactPoolSpec[] | undefined),
   "workflow-keepalive": (spec) => workflowKeepaliveSpecProblem(spec)?.message,
+  "github-pull-request": (spec) => {
+    const parsed = parseGithubPullRequestSpec(spec.context);
+    return "problem" in parsed ? parsed.problem : null;
+  },
 };
 function specProblem(policy: string, parsed: ReturnType<typeof parseWatchdogSpec>): string | null {
   return SPEC_PROBLEMS[policy]?.(parsed) ?? null;

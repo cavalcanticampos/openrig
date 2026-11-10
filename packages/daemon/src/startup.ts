@@ -158,6 +158,8 @@ import { WorkflowRuntime } from "./domain/workflow-runtime.js";
 import { resolveWorkflowHumanDestination } from "./domain/workflow-human-destination.js";
 import { makeWorkflowKeepalivePolicy } from "./domain/policies/workflow-keepalive.js";
 import { makeIdleGateQitemPolicy } from "./domain/policies/idle-gate-qitem.js";
+import { makeGithubPullRequestPolicy } from "./domain/policies/github-pull-request.js";
+import { makeFetchGithubReader, resolveDaemonGithubToken } from "./domain/github-pull-request-client.js";
 import { makeParkedOwnerConsumerPolicy, makeRigAnchor, PARKED_OWNER_POLICY_NAME } from "./domain/policies/parked-owner-consumer.js";
 import { diagnoseRigParked } from "./domain/parked-query.js";
 import { SpecReviewService } from "./domain/spec-review-service.js";
@@ -2409,6 +2411,12 @@ export async function createDaemon(opts?: DaemonOptions): Promise<DaemonResult> 
           reconcileStuckExceptions: (id) => workflowRuntime?.reconcileStuckExceptions(id) ?? 0,
         }),
         makeIdleGateQitemPolicy({ db, seatActivity: seatActivityService }),
+        // Issue #2793: one pull request's checks settling, or its merge/close, wakes the target seat once.
+        // Read-only GitHub REST with the daemon's own token; never the host's gh login.
+        makeGithubPullRequestPolicy({
+          github: makeFetchGithubReader({ token: () => resolveDaemonGithubToken() }),
+          attachment: (jobId) => queueRepoInstance.watchdogAttachment(jobId),
+        }),
         // OPR.0.5.6.24 F-14: the parked-owner consumer — the WHOLE shipped
         // parked diagnosis (diagnoseRigParked over the arbitrated oracle +
         // destination-scoped obligations + wake status; the same derivation

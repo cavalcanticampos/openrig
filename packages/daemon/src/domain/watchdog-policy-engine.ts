@@ -255,6 +255,13 @@ const QUIET_SKIP_REASONS = new Set<string>([
   // seats), NOT via a per-scan log.
   "seat_needs_input",
   "activity_stale_unknown",
+  // Issue #2793 — github-pull-request waiting states. A pull request waiting for a person to merge it is scanned
+  // for days; nothing changed is not worth a history row per scan. The first GitHub failure in a run
+  // (github_unavailable) stays loud; the repeats while GitHub is still failing are quiet.
+  "github_pr_open",
+  "github_checks_pending",
+  "github_checks_settling",
+  "github_unavailable_still",
 ]);
 
 export interface EvaluationResult {

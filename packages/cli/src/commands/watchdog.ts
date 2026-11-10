@@ -86,7 +86,7 @@ export function watchdogCommand(depsOverride?: WatchdogDeps): Command {
       "because prompt-bound consumers act only at turn boundaries",
     )
     .option("--spec <path>", "Path to YAML spec file (optional for context-usage-threshold)")
-    .requiredOption("--policy <policy>", "Policy name (one of: periodic-reminder, artifact-pool-ready, edge-artifact-required, workflow-keepalive, idle-gate-qitem, context-usage-threshold)")
+    .requiredOption("--policy <policy>", "Policy name (one of: periodic-reminder, artifact-pool-ready, edge-artifact-required, workflow-keepalive, idle-gate-qitem, context-usage-threshold, github-pull-request)")
     .requiredOption("--target-session <session>", "Canonical <member>@<rig> target")
     .requiredOption("--interval-seconds <n>", "Evaluation interval (positive integer)")
     .requiredOption("--registered-by <session>", "Registering session (for audit)")
